@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Results</title>
+  </head>
+
+  <style>
+    .Main {
+      max-width: 1024px;
+      margin: 0 auto;
+      background-color: aquamarine;
+      display: flex;
+      flex-flow: column nowrap;
+      gap: 10px;
+    }
+  </style>
+  <body>
+    <h1>Search Results</h1>
+
+    <div>
+      <label for="searchQuery">Enter your query:</label>
+      <input type="text" id="searchQuery" name="searchQuery" />
+      <button id="searchButton">Search</button>
+    </div>
+
+    <div class="Main">
+      <div id="searchResults"></div>
+    </div>
+
+    <script>
+      // Function to fetch search results from backend API
+      async function fetchSearchResults(query) {
+        const response = await fetch("http://localhost:3300/search2", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query }),
+        });
+        const data = await response.json();
+        console.log(data);
+        return data; // Access the newsInfo array directly
+      }
+      // Function to display search results in HTML
+      async function displaySearchResults() {
+        const query = document.getElementById("searchQuery").value;
+        const results = await fetchSearchResults(query);
+
+        const searchResultsDiv = document.getElementById("searchResults");
+        searchResultsDiv.innerHTML = ""; // Clear previous results
+
+        if (results.error) {
+          searchResultsDiv.innerHTML = `<p>Error: ${results.error}</p>`;
+        } else {
+          results.searchInfo.forEach((result) => {
+            const resultDiv = document.createElement("div");
+            resultDiv.innerHTML = `
+                    <div class="item">
+                        <h2>${result.topic}</h2>
+                        <p>${result.description}</p>
+                    `;
+            searchResultsDiv.appendChild(resultDiv);
+          });
+          results.newsInfo.forEach((result) => {
+            const resultDiv = document.createElement("div");
+            resultDiv.innerHTML = `
+                    <div class="item">
+                        <h2>${result.topic}</h2>
+                        <p>${result.description}</p>
+                        <p>Provider: ${result.provider[0].name}</p>
+                        <a href="${result.articleLink}" target="_blank">Read more</a>
+                        <img src="${result.provider[0].image.thumbnail.contentUrl}" alt="Provider Image">
+                        <img height="200" src="${result.images[0].contentUrl}" alt="Provider Image">
+                        </div>
+                    `;
+            searchResultsDiv.appendChild(resultDiv);
+          });
+        }
+      }
+
+      // Event listener for search button
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", displaySearchResults);
+    </script>
+  </body>
+</html>
