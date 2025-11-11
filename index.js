@@ -1,268 +1,133 @@
 const express = require("express");
 const cors = require("cors");
-const { OpenAI } = require("openai");
+require("dotenv").config();
 
-const port = 3300;
+const { getJson } = require("serpapi");
+const Groq = require("groq-sdk");
+
 const app = express();
 app.use(express.json());
-app.use(
-  cors({
-    origin: "*",
-  })
-);
+app.use(cors());
 
-const https = require("https");
-const SUBSCRIPTION_KEY = "680531e54bd24bd6bdcfaa55cccffb11";
+const SERPAPI_KEY = process.env.SERPAPI_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const MODEL = process.env.MODEL || "llama3-70b-8192";
 
-const openai = new OpenAI({
-  apiKey: "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",
-});
+const groq = new Groq({ apiKey: GROQ_API_KEY });
 
+// ✅ SerpAPI Google Search
+async function serpSearch(query) {
+  // If no SERPAPI_KEY provided, return a small mock response for local dev
+  if (!SERPAPI_KEY) {
+    console.warn('SERPAPI_KEY missing — returning mock search results for development');
+    return {
+      organic_results: [
+        { title: `Sample result for ${query}`, snippet: 'This is a mocked search result used when SERPAPI_KEY is not set.', link: 'https://example.com', thumbnail: '' }
+      ],
+      news_results: [
+        { title: `Sample news for ${query}`, snippet: 'Mocked news item.', link: 'https://example.com/news', thumbnail: '' }
+      ]
+    };
+  }
+
+  try {
+    return await getJson({ engine: "google", q: query, api_key: SERPAPI_KEY });
+  } catch (err) {
+    console.error('Error calling SerpAPI:', err && err.message ? err.message : err);
+    // return empty shape so downstream still works
+    return { organic_results: [], news_results: [] };
+  }
+}
+
+// ✅ AI-only call
 app.post("/gpt", async (req, res) => {
   try {
     const { prompt } = req.body;
-
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt is required" });
+    if (!GROQ_API_KEY) {
+      console.warn('GROQ_API_KEY not set — returning canned GPT response for development');
+      return res.json({ response: 'This is a canned AI response because GROQ_API_KEY is not configured.' });
     }
 
-    const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      //model: "gpt-3.5-turbo-0613",
-      model: "gpt-4",
-    });
-
-    const response = completion.choices[0].message.content.trim();
-
-    res.json({ response });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+    const r = await groq.chat.completions.create({ model: MODEL, messages: [{ role: "user", content: prompt }] });
+    res.json({ response: r.choices[0].message.content });
+  } catch (e) {
+    res.status(500).json({ error: "Groq error" });
   }
 });
 
-// function bingWebSearch(query) {
-//     return new Promise((resolve, reject) => {
-//         https.get({
-//             hostname: 'api.bing.microsoft.com',
-//             path: '/v7.0/search?q=' + encodeURIComponent(query),
-//             headers: { 'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY },
-//         }, res => {
-//             let body = '';
-//             res.on('data', part => body += part);
-//             res.on('end', () => {
-//                 const searchResults = JSON.parse(body);
-//                 resolve(searchResults);
-//             });
-//         }).on('error', e => {
-//             reject(e);
-//         });
-//     });
-// }
-
-// app.post('/search2', async (req, res) => {
-//     try {
-//         const { query } = req.body;
-
-//         const searchResult = await bingWebSearch(query);
-
-//         if (searchResult && searchResult.webPages && searchResult.webPages.value.length > 0) {
-//             const topResult = searchResult.webPages.value[0];
-//             const topic = topResult.name; // Extracting the topic from Bing search result
-
-//             const images = searchResult.images && searchResult.images.value ? searchResult.images.value : [];
-//             const imageLinks = images.map(image => image.thumbnailUrl);
-
-//             const completion = await openai.chat.completions.create({
-//                 model: "gpt-4",
-//                 messages: [
-//                     { role: "system", content: `Here are the search results for '${query}':` },
-//                     { role: "system", content: `**${topic}**` },
-//                     { role: "system", content: `Here is an image related to the topic:` },
-//                     { role: "system", content: imageLinks.length > 0 ? imageLinks[0] : "No image available" }
-//                 ],
-//             });
-//             const response = completion.choices[0].message.content.trim();
-
-//             res.json({ response, imageLinks });
-//         } else {
-//             res.status(404).json({ error: 'No search results found' });
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Something went wrong' });
-//     }
-// });
-
-function bingWebSearch(query) {
-  return new Promise((resolve, reject) => {
-    https
-      .get(
-        {
-          hostname: "api.bing.microsoft.com",
-          path: "/v7.0/search?q=" + encodeURIComponent(query),
-          headers: { "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY },
-        },
-        (res) => {
-          let body = "";
-          res.on("data", (part) => (body += part));
-          res.on("end", () => {
-            for (var header in res.headers) {
-              if (
-                header.startsWith("bingapis-") ||
-                header.startsWith("x-msedge-")
-              ) {
-                console.log(header + ": " + res.headers[header]);
-              }
-            }
-            console.log("\nJSON Response:\n");
-            console.dir(JSON.parse(body), { colors: false, depth: null });
-
-            const searchResults = JSON.parse(body);
-            // console.dir(searchResults)
-            resolve(searchResults);
-          });
-        }
-      )
-      .on("error", (e) => {
-        reject(e);
-      });
-  });
-}
-
-// app.post('/search2', async (req, res) => {
-//     try {
-//         const { query } = req.body;
-
-//         const searchResult = await bingWebSearch(query);
-
-//         if (searchResult && searchResult.webPages && searchResult.webPages.value.length > 0) {
-//             const topResult = searchResult.webPages.value[0];
-//             const topic = topResult.name; // Extracting the topic from Bing search result
-//             const articleLink = topResult.url; // Extracting the article link
-
-//             const images = searchResult.images && searchResult.images.value ? searchResult.images.value : [];
-//             const imageLinks = images.map(image => image.thumbnailUrl);
-
-//             const completion = await openai.chat.completions.create({
-//                 model: "gpt-4", // Adjust the model according to your preference
-//                 messages: [
-//                     { role: "system", content: `Here are the search results from bing search '${topic}' Based on this search results and information create a beautiful response and as long as possible and the prompt inpt by the user is : '${query}'` },
-//                     { role: "system", content: `**${topic}**` },
-//                     // { role: "system", content: `You can read more about this topic here: ${articleLink}` },
-//                     // { role: "system", content: `Here is an image related to the topic:` },
-//                     { role: "system", content: imageLinks.length > 0 ? imageLinks[0] : "No image available" }
-//                 ],
-//                 max_tokens: 150, // Adjust token count as needed
-//                 temperature: 0.7 // Adjust temperature as needed
-//             });
-
-//             const response = completion.choices[0].message.content.trim();
-//             res.json({ response, articleLink, imageLinks });
-//         } else {
-//             res.status(404).json({ error: 'No search results found' });
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Something went wrong' });
-//     }
-// });
-
+// ✅ Search + News API
 app.post("/search2", async (req, res) => {
   try {
     const { query } = req.body;
+    const data = await serpSearch(query);
+    // Log raw response for debugging to see which keys SerpAPI returns
+    console.log('\n--- SerpAPI raw response for query:', query, '---');
+    try { console.log(JSON.stringify(data, null, 2)); } catch (e) { console.log(data); }
 
-    const searchResult = await bingWebSearch(query);
+    let searchInfo = [];
+    let newsInfo = [];
 
-    if (
-      searchResult &&
-      searchResult.webPages &&
-      searchResult.webPages.value.length > 0
-    ) {
-      const searchInfo = [];
-      const newsInfo = [];
-
-      const topResults = searchResult.webPages.value;
-      if (
-        searchResult &&
-        searchResult.webPages &&
-        searchResult.webPages.value.length > 0
-      ) {
-        for (const result of topResults) {
-          const topic = result.name; // Extracting the topic from Bing search result
-          const description = result.snippet; // Extracting the topic from Bing search result
-          const articleLink = result.url; // Extracting the article link
-
-          const images = result.image && result.image ? result.image : [];
-
-          searchInfo.push({ topic, description, articleLink, images });
-        }
-      }
-
-      if (
-        searchResult &&
-        searchResult.news &&
-        searchResult.news.value.length > 0
-      ) {
-        const topNews = searchResult.news.value;
-
-        for (const result of topNews) {
-          const topic = result.name; // Extracting the topic from Bing search result
-          const articleLink = result.url; // Extracting the article link
-          const description = result.description; // Extracting the article link
-          const provider = result.provider; // Extracting the article link
-          const images = result.image && result.image ? [result.image] : [];
-
-          newsInfo.push({ topic, description, articleLink, images, provider });
-        }
-      }
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4", // Adjust the model according to your preference
-        messages: [
-          {
-            role: "system",
-            content: `Here are the search results from Bing for '${query}'. Based on these search results and information, create a beautiful response as long as possible.`,
-          },
-          { role: "system", content: `Topics and related information:` },
-          ...searchInfo
-            .map((info) => {
-              return [
-                { role: "system", content: `**${info.description}**` },
-                {
-                  role: "system",
-                  content: `You can read more about this topic here: ${info.articleLink}`,
-                },
-                {
-                  role: "system",
-                  content: `Here is an image related to the topic:`,
-                },
-                {
-                  role: "system",
-                  content:
-                    info.images.length > 0
-                      ? info.images[0]
-                      : "No image available",
-                },
-              ];
-            })
-            .flat(),
-        ],
-      });
-
-      const response = completion.choices[0].message.content.trim();
-      res.json({ response, searchInfo, newsInfo });
-      // res.json({ searchInfo, newsInfo });
-      // res.json({  newsInfo });
-    } else {
-      res.status(404).json({ error: "No search results found" });
+    // 🌐 organic search
+    if (data.organic_results) {
+      searchInfo = data.organic_results.slice(0, 6).map(x => ({
+        topic: x.title,
+        description: x.snippet,
+        articleLink: x.link,
+        images: [{ contentUrl: x.thumbnail }],
+      }));
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+
+    // 📰 news block
+    if (data.news_results) {
+      newsInfo = data.news_results.slice(0, 6).map(x => ({
+        topic: x.title,
+        description: x.snippet,
+        articleLink: x.link,
+        images: [{ contentUrl: x.thumbnail }],
+      }));
+    }
+
+    // Ask AI if GROQ is configured, otherwise return a canned message
+    let ai_answer = null;
+    if (!GROQ_API_KEY) {
+      console.warn('GROQ_API_KEY not set — skipping AI summarization');
+      ai_answer = 'AI summarization is disabled because GROQ_API_KEY is not configured.';
+    } else {
+      try {
+        const ai = await groq.chat.completions.create({
+          model: MODEL,
+          messages: [
+            { role: "system", content: `Summarize search and news results for: ${query}` },
+            { role: "system", content: JSON.stringify({ searchInfo, newsInfo }) }
+          ],
+        });
+        ai_answer = ai.choices[0].message.content;
+      } catch (e) {
+        console.error('AI summarization failed:', e && e.message ? e.message : e);
+        ai_answer = 'AI summarization failed';
+      }
+    }
+
+    res.json({ searchInfo, newsInfo, ai_answer, raw: data });
+
+  } catch (err) {
+    res.status(500).json({ error: "Search API failed" });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Start server on provided PORT or 3300; if port is in use, try the next port.
+const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3300;
+function startServer(port) {
+  const server = app.listen(port, () => console.log(`✅ Backend running on ${port}`));
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.warn(`Port ${port} in use, trying ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+}
+
+startServer(DEFAULT_PORT);

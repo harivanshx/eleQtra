@@ -1,21 +1,26 @@
 {
-  "name": "searchai",
+  "name": "Eleqtra",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "start:live-server": "live-server --port=3000 --entry-file=./index.html",
-  "start:node": "node index.js",
-  "dev": "concurrently \"npm run start:live-server\" \"npm run start:node\""
+    "start:live-server": "live-server --port=3000 --entry-file=./index.html",
+    "start:node": "node index.js",
+    "dev": "concurrently \"npm run start:live-server\" \"npm run start:node\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.13.2",
     "cors": "^2.8.5",
-    "express": "^4.19.1",
-    "openai": "^4.29.2"
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "grok-sdk": "^0.0.1-security",
+    "groq-sdk": "^0.34.0",
+    "openai": "^4.104.0",
+    "serpapi": "^2.2.1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
