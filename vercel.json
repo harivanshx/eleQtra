@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm install",
+  "functions": {
+    "api/search2.js": {
+      "memory": 3008,
+      "maxDuration": 30
+    },
+    "api/gpt.js": {
+      "memory": 3008,
+      "maxDuration": 30
+    }
+  }
+}

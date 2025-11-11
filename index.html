@@ -60,7 +60,19 @@
     </div>
 
     <script>
-      const API_ORIGIN = 'http://localhost:3300'; // backend origin
+      // Dynamically detect if running locally or on Vercel
+      // Local dev: localhost:3000 (live-server) + localhost:3300 (Express)
+      // Vercel: use serverless /api/* endpoints
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const API_ORIGIN = isLocalhost ? 'http://localhost:3300' : '';
+
+      function getSearchEndpoint() {
+        return isLocalhost ? `${API_ORIGIN}/search2` : '/api/search2';
+      }
+
+      function getGptEndpoint() {
+        return isLocalhost ? `${API_ORIGIN}/gpt` : '/api/gpt';
+      }
 
       function showToast(msg, timeout = 3500){
         const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block';
@@ -68,7 +80,7 @@
       }
 
       async function fetchSearchResults(query){
-        const res = await fetch(`${API_ORIGIN}/search2`, {
+        const res = await fetch(getSearchEndpoint(), {
           method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ query })
         });
         if(!res.ok) throw new Error('Search failed');
@@ -76,7 +88,7 @@
       }
 
       async function askGPT(prompt){
-        const res = await fetch(`${API_ORIGIN}/gpt`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt })});
+        const res = await fetch(getGptEndpoint(), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt })});
         if(!res.ok) throw new Error('GPT request failed');
         return res.json();
       }
