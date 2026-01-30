@@ -1,0 +1,26 @@
+# Netlify Configuration
+[build]
+  command = "npm install"
+  publish = "."
+  
+[build.environment]
+  NODE_VERSION = "20"
+
+# Disable secrets scanning for non-sensitive variables
+[build.processing]
+  skip_processing = false
+
+# Environment variable hints (not actual values)
+# Set these in Netlify UI:
+# SERPAPI_KEY = your_serpapi_key
+# GROQ_API_KEY = your_groq_api_key
+
+# Functions configuration for serverless API endpoints
+[functions]
+  directory = "api"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
