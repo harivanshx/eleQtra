@@ -18,7 +18,7 @@
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "grok-sdk": "^0.0.1-security",
-    "groq-sdk": "^0.34.0",
+    "groq-sdk": "^0.37.0",
     "openai": "^4.104.0",
     "serpapi": "^2.2.1"
   },

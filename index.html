@@ -1,198 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>eleQtra — Smart Search</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-      :root{
-        --bg:#0f1724;
-        --card:#0b1220;
-        --muted:#94a3b8;
-        --accent:#06b6d4;
-        --glass: rgba(255,255,255,0.03);
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eleQtra — Smart Search</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #94a3b8;
+      --accent: #06b6d4;
+      --glass: rgba(255, 255, 255, 0.03);
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, Segoe UI, Roboto, Arial;
+      background: linear-gradient(180deg, #071124 0%, #07172b 100%);
+      color: #e6eef6
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 20px
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px
+    }
+
+    .searchbar {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px
+    }
+
+    .searchbar input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: var(--glass);
+      color: inherit;
+      font-size: 16px
+    }
+
+    .searchbar button {
+      padding: 10px 14px;
+      background: linear-gradient(90deg, var(--accent), #0ea5ad);
+      border: none;
+      color: #052028;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px
+    }
+
+    #searchResults {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 18px
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02)
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 16px
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px
+    }
+
+    .card .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--accent);
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      color: #052028;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer
+    }
+
+    .loader {
+      display: none;
+      margin-left: 10px
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #06202a;
+      padding: 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.03)
+    }
+
+    .ai-result {
+      background: #021621;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      margin-top: 8px;
+      color: #d7f7fb
+    }
+
+    @media (max-width:600px) {
+      .searchbar {
+        flex-direction: column
       }
-      html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial; background: linear-gradient(180deg,#071124 0%, #07172b 100%); color:#e6eef6}
-      .container{max-width:1100px;margin:28px auto;padding:20px}
-      header{display:flex;align-items:center;gap:16px}
-      h1{margin:0;font-size:20px}
-      .searchbar{display:flex;gap:8px;margin-top:16px}
-      .searchbar input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);color:inherit;font-size:16px}
-      .searchbar button{padding:10px 14px;background:linear-gradient(90deg,var(--accent),#0ea5ad);border:none;color:#052028;border-radius:10px;font-weight:700;cursor:pointer}
-      .meta{color:var(--muted);font-size:13px;margin-top:8px}
-      #searchResults{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:18px}
-      .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);box-shadow: 0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:8px}
-      .card img{width:100%;height:160px;object-fit:cover;border-radius:8px}
-      .card h3{margin:0;font-size:16px}
-      .card p{margin:0;color:var(--muted);font-size:14px}
-      .card .actions{display:flex;gap:8px;margin-top:10px}
-      .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent);padding:8px 10px;border-radius:8px;cursor:pointer}
-      .btn-primary{background:var(--accent);border:none;color:#052028;padding:8px 10px;border-radius:8px;cursor:pointer}
-      .loader{display:none;margin-left:10px}
-      .toast{position:fixed;right:20px;bottom:20px;background:#06202a;padding:12px;border-radius:8px;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
-      .ai-result{background:#021621;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);margin-top:8px;color:#d7f7fb}
-      @media (max-width:600px){.searchbar{flex-direction:column}.searchbar button{width:100%}}
-    </style>
-  </head>
 
-  <body>
-    <div class="container">
-      <header>
-        <div>
-          <h1>eleQtra</h1>
-          <div class="meta">Fast web search + AI summaries</div>
-        </div>
-      </header>
+      .searchbar button {
+        width: 100%
+      }
+    }
+  </style>
+</head>
 
-      <div class="searchbar">
-        <input id="searchQuery" placeholder="Ask about a news topic, technology, or anything…" />
-        <div style="display:flex;align-items:center">
-          <button id="searchButton">Search</button>
-          <div class="loader" id="loader">⏳</div>
-        </div>
+<body>
+  <div class="container">
+    <header>
+      <img src="logo.png" alt="eleQtra Logo" class="logo">
+      <div>
+        <h1>eleQtra</h1>
+        <div class="meta">Fast web search + AI summaries</div>
       </div>
+    </header>
 
-      <div id="searchResults" aria-live="polite"></div>
-
-      <div id="toast" class="toast" style="display:none"></div>
+    <div class="searchbar">
+      <input id="searchQuery" placeholder="Ask about a news topic, technology, or anything…" />
+      <div style="display:flex;align-items:center">
+        <button id="searchButton">Search</button>
+        <div class="loader" id="loader">⏳</div>
+      </div>
     </div>
 
-    <script>
-      // Dynamically detect if running locally or on Vercel
-      // Local dev: localhost:3000 (live-server) + localhost:3300 (Express)
-      // Vercel: use serverless /api/* endpoints
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const API_ORIGIN = isLocalhost ? 'http://localhost:3300' : '';
+    <div id="searchResults" aria-live="polite"></div>
 
-      function getSearchEndpoint() {
-        return isLocalhost ? `${API_ORIGIN}/search2` : '/api/search2';
+    <div id="toast" class="toast" style="display:none"></div>
+  </div>
+
+  <script>
+    // Dynamically detect if running locally or on Vercel
+    // Local dev: localhost:3000 (live-server) + localhost:3300 (Express)
+    // Vercel: use serverless /api/* endpoints
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_ORIGIN = isLocalhost ? 'http://localhost:3300' : '';
+
+    function getSearchEndpoint() {
+      return isLocalhost ? `${API_ORIGIN}/search2` : '/api/search2';
+    }
+
+    function getGptEndpoint() {
+      return isLocalhost ? `${API_ORIGIN}/gpt` : '/api/gpt';
+    }
+
+    function showToast(msg, timeout = 3500) {
+      const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', timeout);
+    }
+
+    async function fetchSearchResults(query) {
+      const res = await fetch(getSearchEndpoint(), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query })
+      });
+      if (!res.ok) throw new Error('Search failed');
+      return res.json();
+    }
+
+    async function askGPT(prompt) {
+      const res = await fetch(getGptEndpoint(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
+      if (!res.ok) throw new Error('GPT request failed');
+      return res.json();
+    }
+
+    function createCard(item, isNews = false) {
+      const div = document.createElement('div'); div.className = 'card';
+      const title = document.createElement('h3'); title.textContent = item.topic || 'No title'; div.appendChild(title);
+      if (item.images && item.images.length) {
+        const img = document.createElement('img');
+        img.src = (item.images[0].contentUrl || item.images[0]) || '';
+        img.alt = item.topic || 'image';
+        div.appendChild(img);
       }
+      const p = document.createElement('p'); p.textContent = item.description || '';
+      div.appendChild(p);
 
-      function getGptEndpoint() {
-        return isLocalhost ? `${API_ORIGIN}/gpt` : '/api/gpt';
-      }
+      const actions = document.createElement('div'); actions.className = 'actions';
+      const read = document.createElement('a'); read.className = 'btn-ghost'; read.textContent = 'Read more';
+      read.href = item.articleLink || item.url || '#'; read.target = '_blank';
+      actions.appendChild(read);
 
-      function showToast(msg, timeout = 3500){
-        const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block';
-        setTimeout(()=> t.style.display='none', timeout);
-      }
+      const ask = document.createElement('button'); ask.className = 'btn-primary'; ask.textContent = 'Ask GPT';
+      ask.addEventListener('click', async () => {
+        ask.disabled = true; ask.textContent = 'Thinking…';
+        try {
+          const prompt = `Provide a helpful, concise summary and next-steps for the following search result. Title: ${item.topic}\nDescription: ${item.description || ''}\nLink: ${item.articleLink || ''}`;
+          const data = await askGPT(prompt);
+          const aiDiv = document.createElement('div'); aiDiv.className = 'ai-result';
+          // Convert markdown to HTML
+          const formatted = (data.response || JSON.stringify(data))
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+          aiDiv.innerHTML = formatted;
+          div.appendChild(aiDiv);
+        } catch (err) {
+          showToast('AI summarization failed');
+        } finally { ask.disabled = false; ask.textContent = 'Ask GPT'; }
+      });
+      actions.appendChild(ask);
 
-      async function fetchSearchResults(query){
-        const res = await fetch(getSearchEndpoint(), {
-          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ query })
-        });
-        if(!res.ok) throw new Error('Search failed');
-        return res.json();
-      }
+      div.appendChild(actions);
+      return div;
+    }
 
-      async function askGPT(prompt){
-        const res = await fetch(getGptEndpoint(), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt })});
-        if(!res.ok) throw new Error('GPT request failed');
-        return res.json();
-      }
+    async function displaySearchResults() {
+      const q = document.getElementById('searchQuery').value.trim();
+      if (!q) { showToast('Please enter a query'); return; }
+      const loader = document.getElementById('loader'); loader.style.display = 'inline-block';
+      const out = document.getElementById('searchResults'); out.innerHTML = '';
+      try {
+        const results = await fetchSearchResults(q);
+        console.log('Search response:', results);
+        if (results.error) { showToast(results.error); return; }
 
-      function createCard(item, isNews=false){
-        const div = document.createElement('div'); div.className='card';
-        const title = document.createElement('h3'); title.textContent = item.topic || 'No title'; div.appendChild(title);
-        if(item.images && item.images.length){
-          const img = document.createElement('img');
-          img.src = (item.images[0].contentUrl || item.images[0]) || '';
-          img.alt = item.topic || 'image';
-          div.appendChild(img);
+        // combine searchInfo and newsInfo for display
+        const combined = [];
+
+        // frontend expects server to return `searchInfo` and `newsInfo`.
+        // But SerpAPI responses or other backends may use different keys
+        // (e.g. organic_results, news_results). Accept several shapes.
+        if (Array.isArray(results.searchInfo)) {
+          combined.push(...results.searchInfo.map(it => ({ ...it })));
         }
-        const p = document.createElement('p'); p.textContent = item.description || '';
-        div.appendChild(p);
 
-        const actions = document.createElement('div'); actions.className='actions';
-        const read = document.createElement('a'); read.className='btn-ghost'; read.textContent='Read more';
-        read.href = item.articleLink || item.url || '#'; read.target='_blank';
-        actions.appendChild(read);
+        // SerpAPI raw keys fallback
+        if (Array.isArray(results.organic_results)) {
+          combined.push(...results.organic_results.slice(0, 6).map(x => ({
+            topic: x.title,
+            description: x.snippet || x.snippet_highlighted || x.description || '',
+            articleLink: x.link || x.url,
+            images: [{ contentUrl: x.thumbnail }],
+          })));
+        }
 
-        const ask = document.createElement('button'); ask.className='btn-primary'; ask.textContent='Ask GPT';
-        ask.addEventListener('click', async ()=>{
-          ask.disabled = true; ask.textContent = 'Thinking…';
-          try{
-            const prompt = `Provide a helpful, concise summary and next-steps for the following search result. Title: ${item.topic}\nDescription: ${item.description || ''}\nLink: ${item.articleLink || ''}`;
-            const data = await askGPT(prompt);
-            const aiDiv = document.createElement('div'); aiDiv.className='ai-result'; aiDiv.textContent = data.response || JSON.stringify(data);
-            div.appendChild(aiDiv);
-          }catch(err){
-            showToast('AI summarization failed');
-          }finally{ ask.disabled = false; ask.textContent = 'Ask GPT'; }
-        });
-        actions.appendChild(ask);
+        if (Array.isArray(results.newsInfo)) {
+          combined.push(...results.newsInfo.map(it => ({ ...it })));
+        }
 
-        div.appendChild(actions);
-        return div;
-      }
+        if (Array.isArray(results.news_results)) {
+          combined.push(...results.news_results.slice(0, 6).map(x => ({
+            topic: x.title,
+            description: x.snippet || x.description || '',
+            articleLink: x.link || x.url,
+            images: [{ contentUrl: x.thumbnail }],
+          })));
+        }
 
-      async function displaySearchResults(){
-        const q = document.getElementById('searchQuery').value.trim();
-        if(!q) { showToast('Please enter a query'); return; }
-        const loader = document.getElementById('loader'); loader.style.display='inline-block';
-        const out = document.getElementById('searchResults'); out.innerHTML='';
-        try{
-            const results = await fetchSearchResults(q);
-            console.log('Search response:', results);
-            if(results.error){ showToast(results.error); return; }
+        // final guard: if still empty, show raw helpful message for debugging
+        if (combined.length === 0) {
+          // If AI answer exists, show it so user gets something useful
+          if (results.ai_answer) {
+            const formattedAI = results.ai_answer
+              .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+              .replace(/\n/g, '<br>');
+            out.innerHTML = `<div class="card"><h3>AI summary</h3><p>${formattedAI}</p></div>`;
+          } else {
+            out.innerHTML = '<div class="card"><p>No results found</p></div>';
+            // also log full response for debugging in console
+            console.warn('No results could be parsed from search response:', results);
+          }
+        }
 
-            // combine searchInfo and newsInfo for display
-            const combined = [];
+        combined.forEach(item => out.appendChild(createCard(item)));
+      } catch (err) { console.error(err); showToast('Search request failed'); }
+      finally { loader.style.display = 'none'; }
+    }
 
-            // frontend expects server to return `searchInfo` and `newsInfo`.
-            // But SerpAPI responses or other backends may use different keys
-            // (e.g. organic_results, news_results). Accept several shapes.
-            if (Array.isArray(results.searchInfo)) {
-              combined.push(...results.searchInfo.map(it => ({ ...it })));
-            }
+    document.getElementById('searchButton').addEventListener('click', displaySearchResults);
+    document.getElementById('searchQuery').addEventListener('keydown', (e) => { if (e.key === 'Enter') displaySearchResults(); });
+  </script>
+</body>
 
-            // SerpAPI raw keys fallback
-            if (Array.isArray(results.organic_results)) {
-              combined.push(...results.organic_results.slice(0, 6).map(x => ({
-                topic: x.title,
-                description: x.snippet || x.snippet_highlighted || x.description || '',
-                articleLink: x.link || x.url,
-                images: [{ contentUrl: x.thumbnail }],
-              })));
-            }
-
-            if (Array.isArray(results.newsInfo)) {
-              combined.push(...results.newsInfo.map(it => ({ ...it })));
-            }
-
-            if (Array.isArray(results.news_results)) {
-              combined.push(...results.news_results.slice(0, 6).map(x => ({
-                topic: x.title,
-                description: x.snippet || x.description || '',
-                articleLink: x.link || x.url,
-                images: [{ contentUrl: x.thumbnail }],
-              })));
-            }
-
-            // final guard: if still empty, show raw helpful message for debugging
-            if (combined.length === 0) {
-              // If AI answer exists, show it so user gets something useful
-              if (results.ai_answer) {
-                out.innerHTML = `<div class="card"><h3>AI summary</h3><p>${results.ai_answer}</p></div>`;
-              } else {
-                out.innerHTML = '<div class="card"><p>No results found</p></div>';
-                // also log full response for debugging in console
-                console.warn('No results could be parsed from search response:', results);
-              }
-            }
-
-            combined.forEach(item => out.appendChild(createCard(item)));
-        }catch(err){ console.error(err); showToast('Search request failed'); }
-        finally{ loader.style.display='none'; }
-      }
-
-      document.getElementById('searchButton').addEventListener('click', displaySearchResults);
-      document.getElementById('searchQuery').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') displaySearchResults(); });
-    </script>
-  </body>
 </html>
-
-
-
